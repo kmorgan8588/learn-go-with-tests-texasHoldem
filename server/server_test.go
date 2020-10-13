@@ -102,22 +102,6 @@ func TestStoreWins(t *testing.T) {
 	})
 }
 
-func TestRecordingWinsAndRetrievingThem(t *testing.T) {
-	store := NewInMemoryPlayerStore()
-	server := PlayerServer{store}
-	player := "Kyle"
-
-	server.ServeHTTP(httptest.NewRecorder(), newPostWinRequest(player))
-	server.ServeHTTP(httptest.NewRecorder(), newPostWinRequest(player))
-	server.ServeHTTP(httptest.NewRecorder(), newPostWinRequest(player))
-
-	response := httptest.NewRecorder()
-	server.ServeHTTP(response, newGetScoreRequest(player))
-	assertStatus(t, response.Code, http.StatusOK)
-
-	assertResponseBody(t, response.Body.String(), "3")
-}
-
 func newPostWinRequest(name string) *http.Request {
 	req, _ := http.NewRequest(http.MethodPost, fmt.Sprintf("/players/%s", name), nil)
 	return req

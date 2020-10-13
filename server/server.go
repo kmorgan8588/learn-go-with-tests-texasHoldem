@@ -4,32 +4,15 @@ import (
 	"fmt"
 	"net/http"
 	"strings"
-	"sync"
 )
 
-type InMemoryPlayerStore struct {
-	store map[string]int
-	mu    sync.Mutex
-}
-
-func NewInMemoryPlayerStore() *InMemoryPlayerStore {
-	return &InMemoryPlayerStore{store: map[string]int{}}
-}
-func (i *InMemoryPlayerStore) GetPlayerScore(name string) int {
-	return i.store[name]
-}
-
-func (i *InMemoryPlayerStore) RecordWin(name string) {
-	i.mu.Lock()
-	i.store[name]++
-	i.mu.Unlock()
-}
-
+// PlayerStore stores score information about players
 type PlayerStore interface {
 	GetPlayerScore(name string) int
 	RecordWin(name string)
 }
 
+// PlayerServer is an HTTP interface for player information
 type PlayerServer struct {
 	store PlayerStore
 }
