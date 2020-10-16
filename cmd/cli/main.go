@@ -1,9 +1,10 @@
 package main
 
 import (
+	"fmt"
 	"go-app/server"
 	"log"
-	"net/http"
+	"os"
 )
 
 const dbFileName = "game.db.json"
@@ -16,9 +17,8 @@ func main() {
 	}
 	defer close()
 
-	server := server.NewPlayerServer(store)
+	fmt.Println("Let's play poker")
+	fmt.Println("Type {Name} wins to record a win")
 
-	if err := http.ListenAndServe(":8080", server); err != nil {
-		log.Fatalf("could not listen on port 8080 %v", err)
-	}
+	server.NewCLI(store, os.Stdin).PlayPoker()
 }
