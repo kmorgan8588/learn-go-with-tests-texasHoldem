@@ -45,8 +45,8 @@ func TestCLI(t *testing.T) {
 	t.Run("record Chris win from user input", func(t *testing.T) {
 		in := strings.NewReader("5\nCarl wins\n")
 		playerStore := &server.StubPlayerStore{}
-
-		cli := server.NewCLI(playerStore, in, dummyStdOut, dummySpyAlerter)
+		game := server.NewGame(playerStore, dummySpyAlerter)
+		cli := server.NewCLI(in, dummyStdOut, game)
 		cli.PlayPoker()
 
 		server.AssertPlayerWin(t, playerStore, "Carl")
@@ -56,7 +56,8 @@ func TestCLI(t *testing.T) {
 		in := strings.NewReader("5\nKyle wins\n")
 		playerStore := &server.StubPlayerStore{}
 
-		cli := server.NewCLI(playerStore, in, dummyStdOut, dummySpyAlerter)
+		game := server.NewGame(playerStore, dummySpyAlerter)
+		cli := server.NewCLI(in, dummyStdOut, game)
 		cli.PlayPoker()
 
 		server.AssertPlayerWin(t, playerStore, "Kyle")
@@ -67,7 +68,8 @@ func TestCLI(t *testing.T) {
 		playerStore := &server.StubPlayerStore{}
 		blindAlerter := &SpyBlindAlerter{}
 
-		cli := server.NewCLI(playerStore, in, dummyStdOut, blindAlerter)
+		game := server.NewGame(playerStore, blindAlerter)
+		cli := server.NewCLI(in, dummyStdOut, game)
 		cli.PlayPoker()
 
 		if len(blindAlerter.alerts) < 1 {
@@ -81,7 +83,8 @@ func TestCLI(t *testing.T) {
 		playerStore := &server.StubPlayerStore{}
 		blindAlerter := &SpyBlindAlerter{}
 
-		cli := server.NewCLI(playerStore, in, dummyStdOut, blindAlerter)
+		game := server.NewGame(playerStore, blindAlerter)
+		cli := server.NewCLI(in, dummyStdOut, game)
 		cli.PlayPoker()
 
 		cases := []expectedAlert{
@@ -114,7 +117,8 @@ func TestCLI(t *testing.T) {
 		in := strings.NewReader("7\n")
 		blindAlerter := &SpyBlindAlerter{}
 
-		cli := server.NewCLI(dummyPlayerStore, in, stdout, blindAlerter)
+		game := server.NewGame(dummyPlayerStore, blindAlerter)
+		cli := server.NewCLI(in, stdout, game)
 		cli.PlayPoker()
 
 		got := stdout.String()
