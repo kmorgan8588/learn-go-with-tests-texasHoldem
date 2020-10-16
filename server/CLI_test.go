@@ -10,29 +10,20 @@ import (
 )
 
 type SpyBlindAlerter struct {
-	alerts []scheduledAlert
+	alerts []ScheduledAlert
 }
 
-type scheduledAlert struct {
-	at     time.Duration
-	amount int
+type ScheduledAlert struct {
+	At     time.Duration
+	Amount int
 }
 
-type expectedAlert struct {
-	expectedScheduledTime time.Duration
-	expectedAmount        int
-}
-
-func (e expectedAlert) String() string {
-	return fmt.Sprintf("%d chips at %v", e.expectedAmount, e.expectedScheduledTime)
-}
-
-func (s scheduledAlert) String() string {
-	return fmt.Sprintf("%d chips at %v", s.amount, s.at)
+func (s ScheduledAlert) String() string {
+	return fmt.Sprintf("%d chips at %v", s.Amount, s.At)
 }
 
 func (s *SpyBlindAlerter) ScheduleAlertAt(duration time.Duration, amount int) {
-	s.alerts = append(s.alerts, scheduledAlert{duration, amount})
+	s.alerts = append(s.alerts, ScheduledAlert{duration, amount})
 }
 
 var dummySpyAlerter = &SpyBlindAlerter{}
@@ -87,7 +78,7 @@ func TestCLI(t *testing.T) {
 		cli := server.NewCLI(in, dummyStdOut, game)
 		cli.PlayPoker()
 
-		cases := []expectedAlert{
+		cases := []ScheduledAlert{
 			{0 * time.Second, 100},
 			{10 * time.Minute, 200},
 			{20 * time.Minute, 300},
@@ -102,12 +93,12 @@ func TestCLI(t *testing.T) {
 		}
 
 		for i, c := range cases {
-			t.Run(fmt.Sprintf("%d scheduled for %v", c.expectedAmount, c.expectedScheduledTime), func(t *testing.T) {
+			t.Run(fmt.Sprintf("%d scheduled for %v", c.Amount, c.At), func(t *testing.T) {
 				if len(blindAlerter.alerts) <= i {
 					t.Fatalf("alert %d was not scheduled for %v", i, blindAlerter.alerts)
 				}
 				got := blindAlerter.alerts[i]
-				assertScheduledAlert(t, got, c)
+				AssertScheduledAlert(t, got, c)
 			})
 		}
 	})
@@ -127,7 +118,7 @@ func TestCLI(t *testing.T) {
 			t.Errorf("got %q, want %q", got, want)
 		}
 
-		cases := []expectedAlert{
+		cases := []ScheduledAlert{
 			{0 * time.Second, 100},
 			{12 * time.Minute, 200},
 			{24 * time.Minute, 300},
@@ -141,19 +132,19 @@ func TestCLI(t *testing.T) {
 				}
 
 				got := blindAlerter.alerts[i]
-				assertScheduledAlert(t, got, want)
+				AssertScheduledAlert(t, got, want)
 			})
 		}
 	})
 }
 
-func assertScheduledAlert(t *testing.T, got scheduledAlert, want expectedAlert) {
+func AssertScheduledAlert(t *testing.T, got ScheduledAlert, want ScheduledAlert) {
 
-	if got.amount != want.expectedAmount {
-		t.Errorf("got amount %d, want %d", got.amount, want.expectedAmount)
+	if got.Amount != want.Amount {
+		t.Errorf("got amount %d, want %d", got.Amount, want.Amount)
 	}
 
-	if got.at != want.expectedScheduledTime {
-		t.Errorf("got scheduled time of %v, want %v", got.at, want.expectedScheduledTime)
+	if got.At != want.At {
+		t.Errorf("got scheduled time of %v, want %v", got.At, want.At)
 	}
 }
