@@ -1,1 +1,6 @@
-[{"Name":"Kyle","Wins":1},{"Name":"Lyle slays","Wins":2}]
+[
+    {
+        "Name": "Kyle",
+        "Wins": 1
+    }
+]
