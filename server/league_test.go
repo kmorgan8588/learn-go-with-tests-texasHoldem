@@ -26,7 +26,7 @@ func TestLeague(t *testing.T) {
 
 		assertContentType(t, response, jsonContentType)
 		got := getLeagueFromResponse(t, response.Body)
-		assertStatus(t, response.Code, http.StatusOK)
+		assertStatus(t, response, http.StatusOK)
 		assertLeague(t, got, wantedLeague)
 	})
 }
