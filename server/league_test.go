@@ -18,7 +18,7 @@ func TestLeague(t *testing.T) {
 		}
 
 		store := StubPlayerStore{nil, nil, wantedLeague}
-		server := forceMakeServer(t, &store)
+		server := forceMakeServer(t, &store, dummyGame)
 		request := newLeagueRequest()
 		response := httptest.NewRecorder()
 
