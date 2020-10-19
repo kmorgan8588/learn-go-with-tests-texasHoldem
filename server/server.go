@@ -25,7 +25,7 @@ type PlayerServer struct {
 
 const htmlTemplatePath = "game.html"
 
-func NewPlayerServer(store PlayerStore) (*PlayerServer, error) {
+func NewPlayerServer(store PlayerStore, game Game) (*PlayerServer, error) {
 	p := new(PlayerServer)
 	tmpl, err := template.ParseFiles(htmlTemplatePath)
 

@@ -116,7 +116,7 @@ func TestStoreWins(t *testing.T) {
 }
 
 func forceMakeServer(t *testing.T, store PlayerStore, game Game) *PlayerServer {
-	server, err := NewPlayerServer(store)
+	server, err := NewPlayerServer(store, game)
 	if err != nil {
 		t.Fatal("problem creating player server", err)
 	}
@@ -159,14 +159,14 @@ func assertGameStartedWith(t *testing.T, game *GameSpy, playerCount int) {
 	t.Helper()
 
 	if game.StartedWith != playerCount {
-		t.Errorf("wanted Start called with 7 but got %d", game.StartedWith)
+		t.Errorf("wanted Start called with %d but got %d", playerCount, game.StartedWith)
 	}
 }
 func assertGameFinishedWith(t *testing.T, game *GameSpy, winner string) {
 	t.Helper()
 
 	if game.FinishedWith != winner {
-		t.Errorf("wanted Finished to be Kyle but got %q", game.FinishedWith)
+		t.Errorf("wanted Finished to be %s but got %q", winner, game.FinishedWith)
 	}
 }
 
