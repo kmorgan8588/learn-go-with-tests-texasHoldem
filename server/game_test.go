@@ -3,6 +3,7 @@ package server_test
 import (
 	"fmt"
 	"go-app/server"
+	"io/ioutil"
 	"testing"
 	"time"
 )
@@ -12,7 +13,7 @@ func TestGame(t *testing.T) {
 		blindAlerter := &SpyBlindAlerter{}
 		game := server.NewTexasHoldemGame(dummyPlayerStore, blindAlerter)
 
-		game.Start(5)
+		game.Start(5, ioutil.Discard)
 
 		cases := []ScheduledAlert{
 			{At: 0 * time.Second, Amount: 100},
@@ -35,7 +36,7 @@ func TestGame(t *testing.T) {
 		blindAlerter := &SpyBlindAlerter{}
 		game := server.NewTexasHoldemGame(dummyPlayerStore, blindAlerter)
 
-		game.Start(7)
+		game.Start(7, ioutil.Discard)
 
 		cases := []ScheduledAlert{
 			{At: 0 * time.Second, Amount: 100},

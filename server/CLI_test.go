@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"fmt"
 	"go-app/server"
+	"io"
 	"strings"
 	"testing"
 	"time"
@@ -22,7 +23,7 @@ func (s ScheduledAlert) String() string {
 	return fmt.Sprintf("%d chips at %v", s.Amount, s.At)
 }
 
-func (s *SpyBlindAlerter) ScheduleAlertAt(duration time.Duration, amount int) {
+func (s *SpyBlindAlerter) ScheduleAlertAt(duration time.Duration, amount int, to io.Writer) {
 	s.alerts = append(s.alerts, ScheduledAlert{duration, amount})
 }
 
@@ -40,7 +41,7 @@ type GameSpy struct {
 	FinishCalled bool
 }
 
-func (g *GameSpy) Start(numberOfPlayers int) {
+func (g *GameSpy) Start(numberOfPlayers int, to io.Writer) {
 	g.StartCalled = true
 	g.StartedWith = numberOfPlayers
 }
