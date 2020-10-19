@@ -10,7 +10,7 @@ import (
 func TestGame(t *testing.T) {
 	t.Run("schedules alerts on game start for 5 players", func(t *testing.T) {
 		blindAlerter := &SpyBlindAlerter{}
-		game := server.NewGame(dummyPlayerStore, blindAlerter)
+		game := server.NewTexasHoldemGame(dummyPlayerStore, blindAlerter)
 
 		game.Start(5)
 
@@ -33,7 +33,7 @@ func TestGame(t *testing.T) {
 
 	t.Run("schedules alerts on game start for 7 players", func(t *testing.T) {
 		blindAlerter := &SpyBlindAlerter{}
-		game := server.NewGame(dummyPlayerStore, blindAlerter)
+		game := server.NewTexasHoldemGame(dummyPlayerStore, blindAlerter)
 
 		game.Start(7)
 
@@ -50,7 +50,7 @@ func TestGame(t *testing.T) {
 
 func TestGame_Finish(t *testing.T) {
 	store := &server.StubPlayerStore{}
-	game := server.NewGame(store, dummyBlindAlerter)
+	game := server.NewTexasHoldemGame(store, dummyBlindAlerter)
 	winner := "Ruth"
 
 	game.Finish(winner)
