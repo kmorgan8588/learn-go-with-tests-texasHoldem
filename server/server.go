@@ -3,7 +3,9 @@ package server
 import (
 	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"net/http"
+	"strconv"
 	"text/template"
 
 	"github.com/gorilla/websocket"
@@ -21,6 +23,7 @@ type PlayerServer struct {
 	store PlayerStore
 	http.Handler
 	template *template.Template
+	game     Game
 }
 
 const htmlTemplatePath = "game.html"
@@ -35,11 +38,12 @@ func NewPlayerServer(store PlayerStore, game Game) (*PlayerServer, error) {
 
 	p.template = tmpl
 	p.store = store
+	p.game = game
 
 	router := http.NewServeMux()
 	router.Handle("/league", http.HandlerFunc(p.leagueHandler))
 	router.Handle("/players/", http.HandlerFunc(p.playersHandler))
-	router.Handle("/game", http.HandlerFunc(p.game))
+	router.Handle("/game", http.HandlerFunc(p.playGame))
 	router.Handle("/ws", http.HandlerFunc(p.webSocket))
 
 	p.Handler = router
@@ -53,12 +57,17 @@ var wsUpgrader = websocket.Upgrader{
 }
 
 func (p *PlayerServer) webSocket(w http.ResponseWriter, r *http.Request) {
-	conn, _ := wsUpgrader.Upgrade(w, r, nil)
-	_, winnerMsg, _ := conn.ReadMessage()
-	p.store.RecordWin(string(winnerMsg))
+	ws := NewPlayerServerWS(w, r)
+
+	numberOfPlayersMsg := ws.WaitForMsg()
+	numberOfPlayers, _ := strconv.Atoi(string(numberOfPlayersMsg))
+	p.game.Start(numberOfPlayers, ioutil.Discard)
+
+	winnerMsg := ws.WaitForMsg()
+	p.game.Finish(string(winnerMsg))
 }
 
-func (p *PlayerServer) game(w http.ResponseWriter, r *http.Request) {
+func (p *PlayerServer) playGame(w http.ResponseWriter, r *http.Request) {
 	p.template.Execute(w, nil)
 }
 
