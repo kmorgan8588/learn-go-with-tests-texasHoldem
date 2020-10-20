@@ -19,6 +19,7 @@ var (
 type GameSpy struct {
 	StartedWith  int
 	FinishedWith string
+	BlindAlert   []byte
 
 	StartCalled  bool
 	FinishCalled bool
@@ -27,6 +28,7 @@ type GameSpy struct {
 func (g *GameSpy) Start(numberOfPlayers int, to io.Writer) {
 	g.StartCalled = true
 	g.StartedWith = numberOfPlayers
+	to.Write(g.BlindAlert)
 }
 
 func (g *GameSpy) Finish(winner string) {
@@ -125,6 +127,8 @@ func forceMakeServer(t *testing.T, store PlayerStore, game Game) *PlayerServer {
 
 var dummyPlayerStore = &StubPlayerStore{}
 
+const tenMS = 10 * time.Millisecond
+
 func TestGame(t *testing.T) {
 	t.Run("GET /game returns 200", func(t *testing.T) {
 		server := forceMakeServer(t, &StubPlayerStore{}, dummyGame)
@@ -138,8 +142,10 @@ func TestGame(t *testing.T) {
 	})
 
 	t.Run("start a game with 3 players and declare Ruth the winner", func(t *testing.T) {
-		game := &GameSpy{}
+		wantedBlindAlert := "Blind is 100"
 		winner := "Ruth"
+
+		game := &GameSpy{BlindAlert: []byte(wantedBlindAlert)}
 		server := httptest.NewServer(forceMakeServer(t, dummyPlayerStore, game))
 		ws := mustDialWS(t, "ws"+strings.TrimPrefix(server.URL, "http")+"/ws")
 
@@ -149,25 +155,68 @@ func TestGame(t *testing.T) {
 		writeWSMessage(t, ws, "3")
 		writeWSMessage(t, ws, winner)
 
-		time.Sleep(10 * time.Millisecond)
 		assertGameStartedWith(t, game, 3)
 		assertGameFinishedWith(t, game, winner)
+
+		within(t, tenMS, func() { assertWebsocketGotMsg(t, ws, wantedBlindAlert) })
 	})
+}
+
+func assertWebsocketGotMsg(t *testing.T, ws *websocket.Conn, want string) {
+	_, msg, _ := ws.ReadMessage()
+	if string(msg) != want {
+		t.Errorf(`got "%s", want "%s"`, string(msg), want)
+	}
+}
+
+func within(t *testing.T, d time.Duration, assert func()) {
+	t.Helper()
+
+	done := make(chan struct{}, 1)
+
+	go func() {
+		assert()
+		done <- struct{}{}
+	}()
+
+	select {
+	case <-time.After(d):
+		t.Error("timed out")
+	case <-done:
+	}
 }
 
 func assertGameStartedWith(t *testing.T, game *GameSpy, playerCount int) {
 	t.Helper()
 
-	if game.StartedWith != playerCount {
-		t.Errorf("wanted Start called with %d but got %d", playerCount, game.StartedWith)
+	passed := retryUntil(500*time.Millisecond, func() bool {
+		return game.StartedWith == playerCount
+	})
+
+	if !passed {
+		t.Errorf("expected start called with %d, but got %d", playerCount, game.StartedWith)
 	}
 }
 func assertGameFinishedWith(t *testing.T, game *GameSpy, winner string) {
 	t.Helper()
 
-	if game.FinishedWith != winner {
-		t.Errorf("wanted Finished to be %s but got %q", winner, game.FinishedWith)
+	passed := retryUntil(500*time.Millisecond, func() bool {
+		return game.FinishedWith == winner
+	})
+
+	if !passed {
+		t.Errorf("expected finish called with %q, but got %q", winner, game.FinishedWith)
 	}
+}
+
+func retryUntil(d time.Duration, f func() bool) bool {
+	deadline := time.Now().Add(d)
+	for time.Now().Before(deadline) {
+		if f() {
+			return true
+		}
+	}
+	return false
 }
 
 func mustDialWS(t *testing.T, url string) *websocket.Conn {
